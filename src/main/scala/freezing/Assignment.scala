@@ -2,6 +2,9 @@ package freezing
 
 import scala.annotation.tailrec
 
+import scalaz.std.list._
+import scaloi.syntax.foldable._
+
 /** Assignment of athletes among a set of teams. */
 final case class Assignment(size: Int, points: Double, teams: List[Team]) {
 
@@ -9,7 +12,7 @@ final case class Assignment(size: Int, points: Double, teams: List[Team]) {
   def weakest: Team = teams.filter(_.size < size).minBy(_.points)
 
   /** Standard deviation of this assignment from the ideal team distribution. */
-  def standardDeviation: Double = Math.sqrt(teams.map(_.variance(points)).sum / teams.size)
+  def standardDeviation: Double = Math.sqrt(teams.map(_.variance(points)).average)
 
   /** Construct a new assignment by adding an athlete to the weakest team. */
   def +(athlete: Athlete): Assignment = this + (weakest + athlete)
