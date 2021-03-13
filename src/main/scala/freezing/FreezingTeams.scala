@@ -4,41 +4,46 @@ import kantan.csv._
 import kantan.csv.ops._
 import scalaz.std.either._
 import scalaz.std.list._
+import scalaz.std.option._
+import scalaz.syntax.std.option._
 import scalaz.syntax.traverse._
+import scaloi.misc.TryInstances._
 import scaloi.syntax.boolean._
+import scaloi.syntax.collection._
+import scaloi.syntax.option._
 
 import java.io.File
 import scala.util.Try
 
-/**
- * Main entry point into generating freezing team assignments.
- */
+/** Main entry point into generating freezing team assignments.
+  */
 //noinspection ZeroIndexToHead
 object FreezingTeams extends App {
 
   /** Read a CSV with a header. */
-  def readRows(path: String): Try[List[List[String]]] =
-    Try(new File(path).readCsv[List, List[String]](rfc.withHeader).sequence.toTry).flatten
+  def readRows(file: File): Try[List[List[String]]] =
+    Try(file.readCsv[List, List[String]](rfc.withHeader).sequence.toTry).flatten
 
   /** Write a CSV with a header. */
-  def writeRows(path: String, rows: List[List[Long]], headers: List[String]): Try[Unit] =
-    Try(new File(path).writeCsv(rows, rfc.withHeader(headers: _*)))
+  def writeRows(file: File, rows: List[List[Long]], headers: List[String]): Try[Unit] =
+    Try(file.writeCsv(rows, rfc.withHeader(headers: _*)))
 
   /** The main line. */
   def tryIt(): Try[Unit] = // I wish I was a real IO
     for {
-      _ <- (args.length == 3) <@~* Fatality("Syntax: run <captains.csv> <points.csv> <assignments.csv>")
+      argo <- Args(args) <@~* Fatality("Syntax error")
 
-      Array(captainsCsv, pointsCsv, assignmentsCsv) = args
-
-      _ <- new File(captainsCsv).exists <@~* Fatality(s"Not found: $captainsCsv")
-      _ <- new File(pointsCsv).exists <@~* Fatality(s"Not found: $pointsCsv")
-
-      captainRows <- readRows(captainsCsv)
+      captainRows <- readRows(argo.captainsCsv)
       captainIds   = captainRows.map(row => row(0).toLong).toSet
 
-      athleteRows <- readRows(pointsCsv)
-      athletes     = athleteRows.map(row => Athlete(row(0).toLong, row(1).toDouble))
+      athleteRows <- readRows(argo.pointsCsv)
+      baseAthletes = athleteRows.map(row => Athlete(row(0).toLong, row(1).toDouble / argo.pointsDays))
+
+      priorRows  <- argo.priorCsv.traverse(readRows)
+      priorPoints = priorRows.orZ.map2(row => row(0).toLong -> row(1).toDouble / argo.priorDays)
+
+      athletes =
+        baseAthletes.map(athlete => priorPoints.get(athlete.id).transform(athlete)(_.repoint(_, argo.priorWeight)))
 
       (captains, players) = athletes.partition(athlete => captainIds.contains(athlete.id))
 
@@ -59,11 +64,16 @@ object FreezingTeams extends App {
       // Then engage in some optimising liaisons
       finalAssignment = Assignment.optimise(initialAssignment)
 
-      _ <- writeRows(assignmentsCsv, finalAssignment.asRows, Assignment.Headers)
+      _ <- writeRows(argo.outputCsv, finalAssignment.asRows, Assignment.Headers)
 
     } yield {
-      println(s"Wrote $assignmentsCsv (standard deviation ${finalAssignment.standardDeviation})")
+      println(s"Wrote ${argo.outputCsv} (standard deviation ${finalAssignment.standardDeviation})")
     }
+
+  /** That optional transformation you always wished you had. */
+  implicit class OptionalTransform[A](val self: Option[A]) {
+    def transform[B](b: B)(f: (B, A) => B): B = self.cata(f(b, _), b)
+  }
 
   tryIt().get
 }
