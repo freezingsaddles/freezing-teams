@@ -3,7 +3,7 @@ normalizedName := "freezing-teams"
 
 description := "Team assignment tool."
 
-version := "0.1"
+version := "0.2"
 
 organization := "org.freezingsaddles"
 organizationName := "Freezing Saddles"
@@ -16,4 +16,5 @@ scalaVersion := "2.13.5"
 libraryDependencies ++= Seq(
   "com.learningobjects" %% "scaloi"     % "0.3.1",
   "com.nrinaudo"        %% "kantan.csv" % "0.6.1",
+  "com.github.scopt"    %% "scopt"      % "4.0.1"
 )
