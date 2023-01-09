@@ -25,7 +25,7 @@ object FreezingTeams extends App {
     Try(file.readCsv[List, List[String]](rfc.withHeader).sequence.toTry).flatten
 
   /** Write a CSV with a header. */
-  def writeRows(file: File, rows: List[List[Long]], headers: List[String]): Try[Unit] =
+  def writeRows(file: File, rows: List[List[String]], headers: List[String]): Try[Unit] =
     Try(file.writeCsv(rows, rfc.withHeader(headers: _*)))
 
   /** The main line. */
@@ -36,11 +36,20 @@ object FreezingTeams extends App {
       captainRows <- readRows(argo.captainsCsv)
       captainIds   = captainRows.map(row => row(0).toLong).toSet
 
-      athleteRows <- readRows(argo.pointsCsv)
-      baseAthletes = athleteRows.map(row => Athlete(row(0).toLong, row(1).toDouble / argo.pointsDays))
+      pointsRows <- readRows(argo.pointsCsv)
+      pointsMap   = pointsRows.map2(row => row(0) -> row(1).toDouble / argo.pointsDays)
 
-      priorRows  <- argo.priorCsv.traverse(readRows)
-      priorPoints = priorRows.orZ.map2(row => row(0).toLong -> row(1).toDouble / argo.priorDays)
+      athleteRows <- readRows(argo.athletesCsv)
+      stragglern   = athleteRows.length % captainIds.size
+      _            = if (stragglern > 0) println(s"Dropping $stragglern stragglers")
+      allAthletes  = athleteRows
+                       .map(row => Athlete(row(0).toLong, row(1), row(2), pointsMap.get(row(0)).orZ))
+      baseAthletes = allAthletes
+                       .dropRight(stragglern) // drop stragglers by registration time (assuming that's the order)
+                       .sortBy(_.id) // then sort by id for some sense of order
+
+      priorRows   <- argo.priorCsv.traverse(readRows)
+      priorPoints  = priorRows.orZ.map2(row => row(0).toLong -> row(1).toDouble / argo.priorDays)
 
       athletes =
         baseAthletes.map(athlete => priorPoints.get(athlete.id).transform(athlete)(_.repoint(_, argo.priorWeight)))
@@ -50,24 +59,39 @@ object FreezingTeams extends App {
       _ <- (captainIds.size == captains.size) <@~* Fatality("Missing captains")
       _ <- (athletes.size % captains.size == 0) <@~* Fatality(s"Uneven teams ${athletes.size}/${captains.size}")
 
-      teams    = captains.size
-      teamSize = athletes.size / teams
-      points   = athletes.map(_.points).sum / teams
-      _        = println(s"$teams teams, ${athletes.size} athletes, target team points: $points")
+      teams            = captains.size
+      teamSize         = athletes.size / teams
+      points           = athletes.map(_.points).sum / teams
+      (zeroes, heroes) = players.partition(_.zero)
+      _                = println(s"$teams teams, ${athletes.size} athletes (${zeroes.length} zeroes), target team points: $points")
 
       // Form initial teams from just the captains
       captainAssignment = Assignment(teamSize, points, captains.map(captain => Team(captain.id, captain :: Nil)))
 
-      // Allocate players across the teams, strongest player to the weakest team
-      initialAssignment = players.sortBy(athlete => athlete.points).foldr(captainAssignment)(athlete => _ + athlete)
+      // Allocate zeroes evenly across the teams
+      zeroAssignment = zeroes.foldr(captainAssignment)(athlete => _ + athlete)
+
+      // Allocate heroes across the teams, strongest player to the weakest team
+      // Were this a perfect optimizer this initial allocation would not matter; as is, it has a random effect
+      initialAssignment = heroes.sortBy(athlete => athlete.points).foldr(zeroAssignment)(athlete => _ + athlete)
 
       // Then engage in some optimising liaisons
       finalAssignment = Assignment.optimise(initialAssignment)
 
-      _ <- writeRows(argo.outputCsv, finalAssignment.asRows, Assignment.Headers)
+      stragglers = allAthletes
+                     .takeRight(stragglern)
+                     .map(athlete => "" :: athlete.id.toString :: athlete.name :: athlete.email :: "" :: Nil)
+
+      _ <- writeRows(argo.outputCsv, finalAssignment.asRows ::: stragglers, Assignment.Headers)
 
     } yield {
       println(s"Wrote ${argo.outputCsv} (standard deviation ${finalAssignment.standardDeviation})")
+      println(
+        finalAssignment.teams
+          .map(team => team.points + " / " + team.athletes.count(_.points == 0))
+          .zipWithIndex
+          .mkString("\n")
+      )
     }
 
   /** That optional transformation you always wished you had. */

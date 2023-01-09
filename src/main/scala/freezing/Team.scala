@@ -15,6 +15,9 @@ final case class Team(captain: Long, athletes: List[Athlete]) {
   /** Variance from the ideal team points. */
   def variance(mean: Double): Double = (points - mean) * (points - mean)
 
+  /** Number of zero pointers. */
+  def zeroes: Int = athletes.count(_.zero)
+
   /** Construct a new team by adding an athlete to this team. */
   def +(athlete: Athlete): Team = copy(athletes = athlete :: athletes)
 

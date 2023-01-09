@@ -12,7 +12,7 @@ performance at the end of the last competition.
 Yes, the quotes are sadly required.
 
 ```
-sbt "run --captains data/captains-2021.csv --points data/points-2021-01-07.csv --out assignments.csv"
+sbt "run --captains data/captains-2021.csv --athletes data/athletes-2021.csv --points data/points-2021-01-07.csv --out assignments.csv"
 ```
 
 This will write out `assignments.csv` with the team assignments based just on year-to-date performance.
@@ -54,7 +54,19 @@ Captain
 
 ### Athletes
 
-The athletes CSV file should contain the athlete ids and their points as of some date.
+The athletes CSV file should just contain the athlete ids and names (including captains).
+
+```
+Athlete,Name,Email
+101,Chris Christofferson,chris@example.org
+202,Kris Kristey,kris@example.org
+303,Crystal Maze,crys@example.org
+404,Krys Kringle,Krys@example.org
+```
+
+### Points
+
+The points CSV file should contain the athlete ids and their points as of some date.
 
 ```
 Athlete,Points
@@ -73,8 +85,6 @@ WHERE    ride_date <= '2021-01-07'
 GROUP BY athlete_id
 ```
 
-Remember to filter out the non-competitors and add zero-point rows for any athletes who (:shame:) failed to ride.
-
 ### Prior points
 
 The prior points CSV should look just like the athletes CSV. Don't fill in with zeroes; if an athlete is missing
@@ -85,9 +95,9 @@ then only their current performance is considered.
 The assignments file will contain team id and athlete id.
 
 ```
-Team,Athlete
-1,101
-1,109
+Team,Strava ID,Name,Email,Captain
+1,101,Chris,chris@example.org,Yes
+1,109,Kris,kris@example.org,
 ```
 
 Team ids are somewhat arbitrarily assigned.

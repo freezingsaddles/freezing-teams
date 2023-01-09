@@ -8,6 +8,7 @@ import java.io.File
 /** Team allocation arguments. */
 final case class Args(
   captainsCsv: File = new File("."),
+  athletesCsv: File = new File("."),
   pointsCsv: File = new File("."),
   outputCsv: File = new File("."),
   priorCsv: Option[File] = None,
@@ -34,6 +35,11 @@ object Args {
       opt[File]("captains")
         .action((x, c) => c.copy(captainsCsv = x))
         .text("captains CSV file")
+        .validate(fileExists)
+        .required(),
+      opt[File]("athletes")
+        .action((x, c) => c.copy(athletesCsv = x))
+        .text("current year athletes CSV file")
         .validate(fileExists)
         .required(),
       opt[File]("points")
