@@ -10,7 +10,7 @@ import scaloi.syntax.foldable._
 import scala.annotation.tailrec
 
 /** Assignment of athletes among a set of teams. */
-final case class Assignment(size: Int, points: Double, teams: List[Team]) {
+final case class Assignment(size: Int, points: Double, teams: List[Team], zipCodes: Map[String, ZipCode]) {
 
   /** Number of zero pointers. */
   private val zeroes = teams.foldMap(_.zeroes)
@@ -29,6 +29,8 @@ final case class Assignment(size: Int, points: Double, teams: List[Team]) {
 
   /** Standard deviation of this assignment from the ideal team distribution. */
   def standardDeviation: Double = Math.sqrt(teams.map(_.variance(points)).average)
+
+  def standardDeviationPlus: Double = Math.sqrt(teams.map(team => team.variance(points) + Math.pow(team.locality(zipCodes), 3) ).average)
 
   /** Construct a new assignment by adding an athlete to the appropriate team. */
   def +(athlete: Athlete): Assignment = this + ((athlete.zero ? smallest | weakest) + athlete)
@@ -52,21 +54,21 @@ final case class Assignment(size: Int, points: Double, teams: List[Team]) {
     (team, index) <- teams.zipWithIndex
     athlete       <- team.athletes
     captain        = (athlete.id == team.captain) ?? "Yes"
-  } yield (1 + index).toString :: athlete.id.toString :: athlete.name :: athlete.email :: captain :: Nil
+  } yield (1 + index).toString :: athlete.id.toString :: athlete.name :: athlete.email :: athlete.zipCode :: captain :: Nil
 }
 
 object Assignment {
-  final val Headers = "Team" :: "Strava ID" :: "Name" :: "Email" :: "Captain" :: Nil
+  final val Headers = "Team" :: "Strava ID" :: "Name" :: "Email" :: "Zip Code" :: "Captain" :: Nil
 
   /** Generate a locally optimal team assignment. */
   @tailrec def optimise(current: Assignment): Assignment = {
     // This is super inefficient; could be done much better with a priority queue,
     // updating standard deviation only as players are exchanged.
 
-    print(s"RMS: ${current.standardDeviation}\r") // so side effect
+    print(s"RMS: ${current.standardDeviationPlus}\r") // so side effect
     // Find the alternate team with the least standard deviation
-    val alternate = current.liaisons.minBy(_.standardDeviation)
-    if (alternate.standardDeviation < current.standardDeviation) {
+    val alternate = current.liaisons.minBy(_.standardDeviationPlus)
+    if (alternate.standardDeviationPlus < current.standardDeviationPlus) {
       // If it's better than the current assignment, try to optimise it more
       optimise(alternate)
     } else {

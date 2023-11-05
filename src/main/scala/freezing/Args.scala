@@ -11,6 +11,7 @@ final case class Args(
   athletesCsv: File = new File("."),
   pointsCsv: File = new File("."),
   outputCsv: File = new File("."),
+  zipCodesCsv: Option[File] = None,
   priorCsv: Option[File] = None,
   pointsDays: Int = 7,
   priorDays: Int = Dates.competitionDaysLastYear,
@@ -54,6 +55,10 @@ object Args {
       opt[File]("prior")
         .action((x, c) => c.copy(priorCsv = Some(x)))
         .text("prior year points CSV file")
+        .validate(fileExists),
+      opt[File]("zipCodes")
+        .action((x, c) => c.copy(zipCodesCsv = Some(x)))
+        .text("zip code lat/long CSV file")
         .validate(fileExists),
       opt[Int]("pointsDays")
         .action((x, c) => c.copy(pointsDays = x))
