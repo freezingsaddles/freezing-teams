@@ -30,7 +30,10 @@ final case class Assignment(size: Int, points: Double, teams: List[Team], zipCod
   /** Standard deviation of this assignment from the ideal team distribution. */
   def standardDeviation: Double = Math.sqrt(teams.map(_.variance(points)).average)
 
-  def standardDeviationPlus: Double = Math.sqrt(teams.map(team => team.variance(points) + Math.pow(team.locality(zipCodes), 3) ).average)
+  def standardDeviationPlus(implicit args: Args): Double =
+    Math.sqrt(
+      teams.map(team => team.variance(points) + Math.pow(team.locality(zipCodes) * args.localityWeight, 2)).average
+    )
 
   /** Construct a new assignment by adding an athlete to the appropriate team. */
   def +(athlete: Athlete): Assignment = this + ((athlete.zero ? smallest | weakest) + athlete)
@@ -54,14 +57,28 @@ final case class Assignment(size: Int, points: Double, teams: List[Team], zipCod
     (team, index) <- teams.zipWithIndex
     athlete       <- team.athletes
     captain        = (athlete.id == team.captain) ?? "Yes"
-  } yield (1 + index).toString :: athlete.id.toString :: athlete.name :: athlete.email :: athlete.zipCode :: captain :: Nil
+  } yield (1 + index).toString :: athlete.id.toString :: athlete.name :: athlete.email :: captain :: Nil
+
+  /** Return roms of the map output. */
+  def mapRows: List[List[String]] =
+    for {
+      team     <- teams
+      captain  <- team.athletes.find(a => a.id == team.captain).toList
+      athlete  <- team.athletes
+      zip      <- zipCodes.get(athlete.zipCode)
+      r         = Math.random * Math.PI * 2
+      d         = Math.random * .005 // small random to avoid pin overlap
+      latitude  = zip.latitude + Math.sin(r) * d
+      longitude = zip.longitude + Math.cos(r) * d
+    } yield captain.name.replaceAll("(\\S)\\S*$", "$1") :: latitude.toString :: longitude.toString :: Nil
 }
 
 object Assignment {
-  final val Headers = "Team" :: "Strava ID" :: "Name" :: "Email" :: "Zip Code" :: "Captain" :: Nil
+  final val Headers    = "Team" :: "Strava ID" :: "Name" :: "Email" :: "Captain" :: Nil
+  final val MapHeaders = "Captain" :: "Latitude" :: "Longitude" :: Nil
 
   /** Generate a locally optimal team assignment. */
-  @tailrec def optimise(current: Assignment): Assignment = {
+  @tailrec def optimise(current: Assignment)(implicit args: Args): Assignment = {
     // This is super inefficient; could be done much better with a priority queue,
     // updating standard deviation only as players are exchanged.
 

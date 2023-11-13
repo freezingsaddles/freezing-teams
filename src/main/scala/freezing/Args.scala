@@ -11,11 +11,13 @@ final case class Args(
   athletesCsv: File = new File("."),
   pointsCsv: File = new File("."),
   outputCsv: File = new File("."),
+  outputMap: Option[File] = None,
   zipCodesCsv: Option[File] = None,
   priorCsv: Option[File] = None,
   pointsDays: Int = 7,
   priorDays: Int = Dates.competitionDaysLastYear,
-  priorWeight: Double = 0.5
+  priorWeight: Double = 0.5,
+  localityWeight: Double = 1.0,
 )
 
 /** Argument parsing. */
@@ -52,6 +54,9 @@ object Args {
         .action((x, c) => c.copy(outputCsv = x))
         .text("output CSV file")
         .required(),
+      opt[File]("map")
+        .action((x, c) => c.copy(outputMap = Some(x)))
+        .text("output map file"),
       opt[File]("prior")
         .action((x, c) => c.copy(priorCsv = Some(x)))
         .text("prior year points CSV file")
@@ -72,6 +77,11 @@ object Args {
         .action((x, c) => c.copy(priorWeight = x))
         .text(s"prior year weighting [0.0, 1.0] (default ${defaults.priorWeight})")
         .validate(x => ((x >= 0.0) && (x <= 1.0) either (()) or "Must be between 0.0 and 1.0").toEither)
+        .optional(),
+      opt[Double]("localityWeight")
+        .action((x, c) => c.copy(localityWeight = x))
+        .text(s"locality weighting [0.0, ∞) (default ${defaults.priorWeight})")
+        .validate(x => ((x >= 0.0) either (()) or "Must be non-negative").toEither)
         .optional()
     )
   }

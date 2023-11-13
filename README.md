@@ -39,12 +39,14 @@ sbt "run --captains data/captains-2021.csv --points data/points-2021-01-07.csv -
 ### Zip code weighting
 
 To factor in spatial locality of the team, specify a zip codes file with zip code latitudes and longitutes.
+This will take more time to process.
 
 ```
-sbt "run --captains data/captains-2021.csv --athletes data/athletes-2021.csv --points data/points-2021-01-07.csv --zipCodes US.csv --out assignments.csv"
+sbt "run --captains data/captains-2021.csv --athletes data/athletes-2021.csv --points data/points-2021-01-07.csv --zipCodes US.csv --out assignments.csv --map map.csv"
 ```
 
-Currently this applies thoroughly arbitrary weight to the locality.
+The locality is weighted by the scaled distance; by default 1 mile is treated like 1 point. A map file is
+output, suitable for upload to Google My Maps.
 
 ## CSV format
 
@@ -64,8 +66,8 @@ Captain
 
 ### Athletes
 
-The athletes CSV file should just contain the athlete ids and names (including captains) and their zip code in the
-17th column, that being the column that Wordpress gave me.
+The athletes CSV file should contain the athlete ids and names (including captains) and their zip codes. Assumes
+column titles "Strava user ID", "Name", "Email", "Zip Code".
 
 ```
 Athlete,Name,Email,,,,,,,,,,,,,,,Zip
@@ -103,8 +105,8 @@ then only their current performance is considered.
 
 ### Zip codes
 
-This should be a CSV with the zip code in column 2, latitued in column 10, longitude in column 11, just like
-what you get if you take the US TSV from http://download.geonames.org/export/zip/ and make a CSV of it.
+This should be a CSV with the zip code, latitude and longitude. Take the US TSV from http://download.geonames.org/export/zip/
+and make a CSV of it with a header row.
 
 ### Assignments
 
