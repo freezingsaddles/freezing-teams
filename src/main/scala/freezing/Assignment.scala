@@ -30,6 +30,8 @@ final case class Assignment(size: Int, points: Double, teams: List[Team], zipCod
   /** Standard deviation of this assignment from the ideal team distribution. */
   def standardDeviation: Double = Math.sqrt(teams.map(_.variance(points)).average)
 
+  def locality: Double = Math.sqrt(teams.map(team => Math.pow(team.locality(zipCodes), 2)).average)
+
   def standardDeviationPlus(implicit args: Args): Double =
     Math.sqrt(
       teams.map(team => team.variance(points) + Math.pow(team.locality(zipCodes) * args.localityWeight, 2)).average
@@ -82,7 +84,9 @@ object Assignment {
     // This is super inefficient; could be done much better with a priority queue,
     // updating standard deviation only as players are exchanged.
 
-    print(s"RMS: ${current.standardDeviationPlus}\r") // so side effect
+    println(
+      s"\u001b[FRMS: ${current.standardDeviationPlus} – ${current.standardDeviation}pt, ${current.locality}mi"
+    ) // so side effect
     // Find the alternate team with the least standard deviation
     val alternate = current.liaisons.minBy(_.standardDeviationPlus)
     if (alternate.standardDeviationPlus < current.standardDeviationPlus) {
