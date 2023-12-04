@@ -1,7 +1,7 @@
 # Freezing Teams
 
 Assign freezing teams based on individual performance at the start of the competition and optionally
-performance at the end of the last competition.
+performance at the end of the last competition and optionally spatial locality of the team.
 
 ## Install scala build tool
 
@@ -36,6 +36,18 @@ Or, to be pedantic:
 sbt "run --captains data/captains-2021.csv --points data/points-2021-01-07.csv --prior data/points-2020-03-19.csv --pointsDays 7 --priorDays 58 --priorWeight 0.5 --out assignments.csv"
 ```
 
+### Zip code weighting
+
+To factor in spatial locality of the team, specify a zip codes file with zip code latitudes and longitutes.
+This will take more time to process.
+
+```
+sbt "run --captains data/captains-2021.csv --athletes data/athletes-2021.csv --points data/points-2021-01-07.csv --zipCodes US.csv --out assignments.csv --map map.csv"
+```
+
+The locality is weighted by the scaled distance; by default 1 mile is treated like 1 point. A map file is
+output, suitable for upload to Google My Maps.
+
 ## CSV format
 
 The CSVs need headers.
@@ -54,14 +66,15 @@ Captain
 
 ### Athletes
 
-The athletes CSV file should just contain the athlete ids and names (including captains).
+The athletes CSV file should contain the athlete ids and names (including captains) and their zip codes. Assumes
+column titles "Strava user ID", "Name", "Email", "Zip Code".
 
 ```
-Athlete,Name,Email
-101,Chris Christofferson,chris@example.org
-202,Kris Kristey,kris@example.org
-303,Crystal Maze,crys@example.org
-404,Krys Kringle,Krys@example.org
+Athlete,Name,Email,,,,,,,,,,,,,,,Zip
+101,Chris Christofferson,chris@example.org,,,,,,,,,,,,,,,12345
+202,Kris Kristey,kris@example.org,,,,,,,,,,,,,,,54321
+303,Crystal Maze,crys@example.org,,,,,,,,,,,,,,,31415
+404,Krys Kringle,Krys@example.org,,,,,,,,,,,,,,,98765
 ```
 
 ### Points
@@ -89,6 +102,11 @@ GROUP BY athlete_id
 
 The prior points CSV should look just like the athletes CSV. Don't fill in with zeroes; if an athlete is missing
 then only their current performance is considered.
+
+### Zip codes
+
+This should be a CSV with the zip code, latitude and longitude. Take the US TSV from http://download.geonames.org/export/zip/
+and make a CSV of it with a header row.
 
 ### Assignments
 
