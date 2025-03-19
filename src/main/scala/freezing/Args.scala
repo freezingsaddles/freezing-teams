@@ -7,13 +7,13 @@ import java.io.File
 
 /** Team allocation arguments. */
 final case class Args(
-  captainsCsv: File = new File("."),
-  athletesCsv: File = new File("."),
+  registrationsCsv: File = new File("."),
   pointsCsv: File = new File("."),
   outputCsv: File = new File("."),
   outputMap: Option[File] = None,
   zipCodesCsv: Option[File] = None,
   priorCsv: Option[File] = None,
+  antagonistsCsv: Option[File] = None,
   pointsDays: Int = 7,
   priorDays: Int = Dates.competitionDaysLastYear,
   priorWeight: Double = 0.5,
@@ -35,14 +35,9 @@ object Args {
     OParser.sequence(
       programName("FreezingTeams"),
       head("Freezing teams", "0.2"),
-      opt[File]("captains")
-        .action((x, c) => c.copy(captainsCsv = x))
-        .text("captains CSV file")
-        .validate(fileExists)
-        .required(),
-      opt[File]("athletes")
-        .action((x, c) => c.copy(athletesCsv = x))
-        .text("current year athletes CSV file")
+      opt[File]("registrations")
+        .action((x, c) => c.copy(registrationsCsv = x))
+        .text("current year registrations CSV file")
         .validate(fileExists)
         .required(),
       opt[File]("points")
@@ -60,6 +55,10 @@ object Args {
       opt[File]("prior")
         .action((x, c) => c.copy(priorCsv = Some(x)))
         .text("prior year points CSV file")
+        .validate(fileExists),
+      opt[File]("antagonists")
+        .action((x, c) => c.copy(antagonistsCsv = Some(x)))
+        .text("antagonists CSV file")
         .validate(fileExists),
       opt[File]("zipCodes")
         .action((x, c) => c.copy(zipCodesCsv = Some(x)))

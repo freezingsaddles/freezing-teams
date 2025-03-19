@@ -10,7 +10,13 @@ import scaloi.syntax.foldable._
 import scala.annotation.tailrec
 
 /** Assignment of athletes among a set of teams. */
-final case class Assignment(size: Int, points: Double, teams: List[Team], zipCodes: Map[String, ZipCode]) {
+final case class Assignment(
+  size: Int,
+  points: Double,
+  teams: List[Team],
+  zipCodes: Map[String, ZipCode],
+  antagonists: List[Set[Long]]
+) {
 
   /** Number of zero pointers. */
   private val zeroes = teams.foldMap(_.zeroes)
@@ -34,7 +40,11 @@ final case class Assignment(size: Int, points: Double, teams: List[Team], zipCod
 
   def standardDeviationPlus(implicit args: Args): Double =
     Math.sqrt(
-      teams.map(team => team.variance(points) + Math.pow(team.locality(zipCodes) * args.localityWeight, 2)).average
+      teams
+        .map(team =>
+          team.variance(points) + team.antagonism(antagonists) + Math.pow(team.locality(zipCodes) * args.localityWeight, 3)
+        )
+        .average
     )
 
   /** Construct a new assignment by adding an athlete to the appropriate team. */

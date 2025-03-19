@@ -12,7 +12,7 @@ performance at the end of the last competition and optionally spatial locality o
 Yes, the quotes are sadly required.
 
 ```
-sbt "run --captains data/captains-2021.csv --athletes data/athletes-2021.csv --points data/points-2021-01-07.csv --out assignments.csv"
+sbt "run --registrations data/registrations-2024.csv --points data/points-2024-01-07.csv --out assignments.csv"
 ```
 
 This will write out `assignments.csv` with the team assignments based just on year-to-date performance.
@@ -27,13 +27,13 @@ exist for an athlete, just their current year performance is considered.
 
 
 ```
-sbt "run --captains data/captains-2021.csv --points data/points-2021-01-07.csv --prior data/points-2020-03-19.csv --out assignments.csv"
+sbt "run --registrations data/registrations-2024.csv --points data/points-2024-01-07.csv --prior data/points-2023-03-19.csv --out assignments.csv"
 ```
 
 Or, to be pedantic:
 
 ```
-sbt "run --captains data/captains-2021.csv --points data/points-2021-01-07.csv --prior data/points-2020-03-19.csv --pointsDays 7 --priorDays 58 --priorWeight 0.5 --out assignments.csv"
+sbt "run --registrations data/registrations-2024.csv --points data/points-2024-01-07.csv --prior data/points-2020303-19.csv --pointsDays 7 --priorDays 58 --priorWeight 0.5 --out assignments.csv"
 ```
 
 ### Zip code weighting
@@ -42,39 +42,35 @@ To factor in spatial locality of the team, specify a zip codes file with zip cod
 This will take more time to process.
 
 ```
-sbt "run --captains data/captains-2021.csv --athletes data/athletes-2021.csv --points data/points-2021-01-07.csv --zipCodes US.csv --out assignments.csv --map map.csv"
+sbt "run --registrations data/registrations-2024.csv --points data/points-2024-01-07.csv --zipCodes US.csv --out assignments.csv --map map.csv"
 ```
 
 The locality is weighted by the scaled distance; by default 1 mile is treated like 1 point. A map file is
 output, suitable for upload to Google My Maps.
 
+### Antagonists
+
+Should some individuals wish to avoid co-teaming, specify an antagonists CSV. 
+
+```
+sbt "run --registrations data/registrations-2024.csv --points data/points-2024-01-07.csv --antagonists anta.csv --out assignments.csv"
+```
+
 ## CSV format
 
 The CSVs need headers.
 
-### Captains
-
-The captains CSV file should just contain the captain ids.
-
-```
-Captain
-101
-202
-303
-404
-```
-
-### Athletes
+### Registrations
 
 The athletes CSV file should contain the athlete ids and names (including captains) and their zip codes. Assumes
-column titles "Strava user ID", "Name", "Email", "Zip Code".
+column titles "Strava user ID", "First Name", "Last Name", "E-mail ", "Zip Code", "Willing to be a team captain?".
 
 ```
-Athlete,Name,Email,,,,,,,,,,,,,,,Zip
-101,Chris Christofferson,chris@example.org,,,,,,,,,,,,,,,12345
-202,Kris Kristey,kris@example.org,,,,,,,,,,,,,,,54321
-303,Crystal Maze,crys@example.org,,,,,,,,,,,,,,,31415
-404,Krys Kringle,Krys@example.org,,,,,,,,,,,,,,,98765
+Athlete,First Name,Last Name,E-mail,,,,,,,,,,,,,,,Zip,Willing to be a team captain?
+101,Chris,Christofferson,chris@example.org,,,,,,,,,,,,,,,12345,Y
+202,Kris,Kristey,kris@example.org,,,,,,,,,,,,,,,54321
+303,Crystal,Maze,crys@example.org,,,,,,,,,,,,,,,31415
+404,Krys,Kringle,Krys@example.org,,,,,,,,,,,,,,,98765
 ```
 
 ### Points
@@ -107,6 +103,11 @@ then only their current performance is considered.
 
 This should be a CSV with the zip code, latitude and longitude. Take the US TSV from http://download.geonames.org/export/zip/
 and make a CSV of it with a header row.
+
+### Antagonists
+
+This should be a CSV with header, with each row containing pairs of athlete ids who do not wish to be on the same
+team.
 
 ### Assignments
 
