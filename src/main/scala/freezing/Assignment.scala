@@ -42,7 +42,8 @@ final case class Assignment(
     Math.sqrt(
       teams
         .map(team =>
-          team.variance(points) + team.antagonism(antagonists) + Math.pow(team.locality(zipCodes) * args.localityWeight, 3)
+          team.variance(points) + team.antagonism(antagonists) + Math
+            .pow(team.locality(zipCodes) * args.localityWeight, 3)
         )
         .average
     )
@@ -56,8 +57,8 @@ final case class Assignment(
   /** Find all possible alternate assignments created by exchanging just a single pair of athletes. */
   private def liaisons: Iterator[Assignment] = for {
     tail    <- teams.tails if tail.nonEmpty
-    aTeam    = tail.head // for all possible A teams
-    bTeam   <- tail.tail // for all subsequent B teams
+    aTeam    = tail.head     // for all possible A teams
+    bTeam   <- tail.tail     // for all subsequent B teams
     aPlayer <- aTeam.players // for all A players
     if !aPlayer.zero || (bTeam.zeroes < maxZeroes && aTeam.zeroes > minZeroes) // no violation of zero limits
     bPlayer <- bTeam.players // for all B players
