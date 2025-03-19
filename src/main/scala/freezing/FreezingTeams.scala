@@ -1,17 +1,17 @@
 package freezing
 
-import kantan.csv._
-import kantan.csv.ops._
-import scalaz.std.either._
-import scalaz.std.list._
-import scalaz.std.option._
-import scalaz.syntax.std.option._
-import scalaz.syntax.traverse._
-import scaloi.misc.TryInstances._
-import scaloi.syntax.boolean._
-import scaloi.syntax.collection._
-import scaloi.syntax.foldable._
-import scaloi.syntax.option._
+import kantan.csv.*
+import kantan.csv.ops.*
+import scalaz.std.either.*
+import scalaz.std.list.*
+import scalaz.std.option.*
+import scalaz.syntax.std.option.*
+import scalaz.syntax.traverse.*
+import scaloi.misc.TryInstances.*
+import scaloi.syntax.boolean.*
+import scaloi.syntax.collection.*
+import scaloi.syntax.foldable.*
+import scaloi.syntax.option.*
 
 import java.io.File
 import scala.util.{Success, Try}
@@ -19,27 +19,26 @@ import scala.util.{Success, Try}
 /** Main entry point into generating freezing team assignments.
   */
 //noinspection ZeroIndexToHead
-object FreezingTeams extends App {
+object FreezingTeams extends App:
 
   /** Read a CSV with a header. */
   def readRows(file: File): Try[List[Map[String, String]]] =
     Try(file.readCsv[List, Map[String, String]](rfc.withHeader).sequence.toTry).flatten
 
-  implicit val MapDecoder: HeaderDecoder[Map[String, String]] = new HeaderDecoder[Map[String, String]] {
+  implicit val MapDecoder: HeaderDecoder[Map[String, String]] = new HeaderDecoder[Map[String, String]]:
     override def fromHeader(header: Seq[String]): DecodeResult[RowDecoder[Map[String, String]]] =
       Right((e: Seq[String]) => Right(header.zip(e).toMap))
 
     override def noHeader: RowDecoder[Map[String, String]] = (e: Seq[String]) =>
       Right(e.zipWithIndex.map(t => t._2.toString -> t._1).toMap)
-  }
 
   /** Write a CSV with a header. */
   def writeRows(file: File, rows: List[List[String]], headers: List[String]): Try[Unit] =
-    Try(file.writeCsv(rows, rfc.withHeader(headers: _*)))
+    Try(file.writeCsv(rows, rfc.withHeader(headers*)))
 
   /** The main line. */
   def tryIt(): Try[Unit] = // I wish I was a real IO
-    for {
+    for
       argo <- Args(args) <@~* Fatality("Syntax error")
 
       pointsRows <- readRows(argo.pointsCsv)
@@ -75,7 +74,7 @@ object FreezingTeams extends App {
 
       stragglern = regRows.length % captainIds.size + captainIds.size
       stragglerz = allAthletes.takeRight(stragglern).count(_.points == 0)
-      _          = if (stragglern > 0) println(s"Dropping $stragglern stragglers, $stragglerz with no points")
+      _          = if stragglern > 0 then println(s"Dropping $stragglern stragglers, $stragglerz with no points")
 
       baseAthletes =
         allAthletes
@@ -126,7 +125,7 @@ object FreezingTeams extends App {
       _ <- writeRows(argo.outputCsv, finalAssignment.asRows ::: stragglers, Assignment.Headers)
 
       _ <- argo.outputMap.cata(writeRows(_, finalAssignment.mapRows, Assignment.MapHeaders), Success(()))
-    } yield {
+    yield
       val locality = finalAssignment.teams.map(_.locality(zipCodes)).average
       println(
         s"Wrote ${argo.outputCsv} (standard deviation ${finalAssignment.standardDeviation}, locality ${locality}mi)"
@@ -137,12 +136,10 @@ object FreezingTeams extends App {
           .zipWithIndex
           .mkString("\n")
       )
-    }
 
   /** That optional transformation you always wished you had. */
-  implicit class OptionalTransform[A](val self: Option[A]) {
+  implicit class OptionalTransform[A](val self: Option[A]):
     def transform[B](b: B)(f: (B, A) => B): B = self.cata(f(b, _), b)
-  }
 
   tryIt().get
-}
+end FreezingTeams

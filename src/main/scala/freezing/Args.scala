@@ -1,6 +1,6 @@
 package freezing
 
-import scalaz.syntax.std.boolean._
+import scalaz.syntax.std.boolean.*
 import scopt.OParser
 
 import java.io.File
@@ -21,7 +21,7 @@ final case class Args(
 )
 
 /** Argument parsing. */
-object Args {
+object Args:
 
   /** Parse arguments. */
   def apply(args: Array[String]): Option[Args] = OParser.parse(parser, args, defaults)
@@ -30,8 +30,8 @@ object Args {
 
   private val builder = OParser.builder[Args]
 
-  private val parser = {
-    import builder._
+  private val parser =
+    import builder.*
     OParser.sequence(
       programName("FreezingTeams"),
       head("Freezing teams", "0.2"),
@@ -83,9 +83,9 @@ object Args {
         .validate(x => ((x >= 0.0) either (()) or "Must be non-negative").toEither)
         .optional()
     )
-  }
+  end parser
 
   /** Validate that an input file exists. */
   def fileExists(file: File): Either[String, Unit] =
     (file.exists either (()) or s"Not found: $file").toEither
-}
+end Args

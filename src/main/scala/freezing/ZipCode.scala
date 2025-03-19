@@ -1,8 +1,8 @@
 package freezing
 
-final case class ZipCode(zipCode: String, latitude: Double, longitude: Double) {
+final case class ZipCode(zipCode: String, latitude: Double, longitude: Double):
   // https://en.wikipedia.org/wiki/Versine#hav
-  def -(elsewhere: ZipCode): Double = {
+  def -(elsewhere: ZipCode): Double =
     val latDistance = Math.toRadians(latitude - elsewhere.latitude)
     val lngDistance = Math.toRadians(longitude - elsewhere.longitude)
     val sinLat      = Math.sin(latDistance / 2)
@@ -12,9 +12,8 @@ final case class ZipCode(zipCode: String, latitude: Double, longitude: Double) {
         Math.cos(Math.toRadians(latitude)) *
         sinLng * sinLng)
     ZipCode.EarthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  }
-}
+  end -
+end ZipCode
 
-object ZipCode {
+object ZipCode:
   private final val EarthRadius = 3958.8
-}

@@ -1,11 +1,11 @@
 package freezing
 
-import scalaz.std.anyVal._
-import scalaz.std.list._
-import scalaz.std.string._
-import scalaz.syntax.foldable._
-import scalaz.syntax.std.boolean._
-import scaloi.syntax.foldable._
+import scalaz.std.anyVal.*
+import scalaz.std.list.*
+import scalaz.std.string.*
+import scalaz.syntax.foldable.*
+import scalaz.syntax.std.boolean.*
+import scaloi.syntax.foldable.*
 
 import scala.annotation.tailrec
 
@@ -16,7 +16,7 @@ final case class Assignment(
   teams: List[Team],
   zipCodes: Map[String, ZipCode],
   antagonists: List[Set[Long]]
-) {
+):
 
   /** Number of zero pointers. */
   private val zeroes = teams.foldMap(_.zeroes)
@@ -55,7 +55,7 @@ final case class Assignment(
   def +(team: Team): Assignment = copy(teams = team :: teams.filterNot(_.captain == team.captain))
 
   /** Find all possible alternate assignments created by exchanging just a single pair of athletes. */
-  private def liaisons: Iterator[Assignment] = for {
+  private def liaisons: Iterator[Assignment] = for
     tail    <- teams.tails if tail.nonEmpty
     aTeam    = tail.head     // for all possible A teams
     bTeam   <- tail.tail     // for all subsequent B teams
@@ -63,18 +63,18 @@ final case class Assignment(
     if !aPlayer.zero || (bTeam.zeroes < maxZeroes && aTeam.zeroes > minZeroes) // no violation of zero limits
     bPlayer <- bTeam.players // for all B players
     if !bPlayer.zero || (aTeam.zeroes < maxZeroes && bTeam.zeroes > minZeroes) // no violation of zero limits
-  } yield this + (aTeam - aPlayer + bPlayer) + (bTeam - bPlayer + aPlayer) // exchange the players
+  yield this + (aTeam - aPlayer + bPlayer) + (bTeam - bPlayer + aPlayer) // exchange the players
 
   /** Return rows of the team assignments. */
-  def asRows: List[List[String]] = for {
+  def asRows: List[List[String]] = for
     (team, index) <- teams.zipWithIndex
     athlete       <- team.athletes
     captain        = (athlete.id == team.captain) ?? "Yes"
-  } yield (1 + index).toString :: athlete.id.toString :: athlete.name :: athlete.email :: captain :: Nil
+  yield (1 + index).toString :: athlete.id.toString :: athlete.name :: athlete.email :: captain :: Nil
 
   /** Return roms of the map output. */
   def mapRows: List[List[String]] =
-    for {
+    for
       team     <- teams
       captain  <- team.athletes.find(a => a.id == team.captain).toList
       athlete  <- team.athletes
@@ -83,15 +83,15 @@ final case class Assignment(
       d         = Math.random * .005 // small random to avoid pin overlap
       latitude  = zip.latitude + Math.sin(r) * d
       longitude = zip.longitude + Math.cos(r) * d
-    } yield captain.name.replaceAll("(\\S)\\S*$", "$1") :: latitude.toString :: longitude.toString :: Nil
-}
+    yield captain.name.replaceAll("(\\S)\\S*$", "$1") :: latitude.toString :: longitude.toString :: Nil
+end Assignment
 
-object Assignment {
+object Assignment:
   final val Headers    = "Team" :: "Strava ID" :: "Name" :: "Email" :: "Captain" :: Nil
   final val MapHeaders = "Captain" :: "Latitude" :: "Longitude" :: Nil
 
   /** Generate a locally optimal team assignment. */
-  @tailrec def optimise(current: Assignment)(implicit args: Args): Assignment = {
+  @tailrec def optimise(current: Assignment)(implicit args: Args): Assignment =
     // This is super inefficient; could be done much better with a priority queue,
     // updating standard deviation only as players are exchanged.
 
@@ -100,12 +100,11 @@ object Assignment {
     ) // so side effect
     // Find the alternate team with the least standard deviation
     val alternate = current.liaisons.minBy(_.standardDeviationPlus)
-    if (alternate.standardDeviationPlus < current.standardDeviationPlus) {
+    if alternate.standardDeviationPlus < current.standardDeviationPlus then
       // If it's better than the current assignment, try to optimise it more
       optimise(alternate)
-    } else {
+    else
       // Else stick with what we have
       current
-    }
-  }
-}
+  end optimise
+end Assignment
