@@ -42,36 +42,54 @@ object FreezingTeams extends App {
     for {
       argo <- Args(args) <@~* Fatality("Syntax error")
 
-      captainRows <- readRows(argo.captainsCsv)
-      captainIds   = captainRows.map(row => row("Captain").toLong).toSet
-
       pointsRows <- readRows(argo.pointsCsv)
-      pointsMap   = pointsRows.map2(row => row("Athlete") -> row("Points").toDouble / argo.pointsDays)
+      pointsMap   = pointsRows.map2(row => row("Athlete").toLong -> row("Points").toDouble / argo.pointsDays)
+
+      regRows <- readRows(argo.registrationsCsv)
+
+      captainLimit = regRows.length / 10 // Min team size 10
+
+      captainIds = regRows
+                     .filter(row => row("Willing to be a team captain?").startsWith("Y"))
+                     .map(row => row("Strava user ID").toLong)
+                     .filter(id => pointsMap.get(id).exists(_ > 0))
+                     .take(captainLimit)
+                     .toSet
 
       zipRows <- argo.zipCodesCsv.cata(readRows, Try(Nil))
       zipCodes = zipRows
                    .map(row => ZipCode(row("Zip Code"), row("Latitude").toDouble, row("Longitude").toDouble))
                    .groupUniqBy(_.zipCode)
 
-      athleteRows <- readRows(argo.athletesCsv)
-      stragglern   = athleteRows.length % captainIds.size
-      _            = if (stragglern > 0) println(s"Dropping $stragglern stragglers")
-      allAthletes  = athleteRows
-                       .map(row =>
-                         Athlete(
-                           row("Strava user ID").toLong,
-                           row("Name"),
-                           row("Email"),
-                           pointsMap.get(row("Strava user ID")).orZ,
-                           row("Zip Code")
-                         )
-                       )
-      baseAthletes = allAthletes
-                       .dropRight(stragglern) // drop stragglers by registration time (assuming that's the order)
-                       .sortBy(_.id) // then sort by id for some sense of order
+      allAthletes = regRows
+                      .map(row =>
+                        Athlete(
+                          row("Strava user ID").toLong,
+                          row("First Name").trim + " " + row("Last Name").trim,
+                          row("E-mail"),
+                          pointsMap.get(row("Strava user ID").toLong).orZ,
+                          row("Zip Code")
+                        )
+                      )
+                      .sortBy(a => (!captainIds.contains(a.id), a.points == 0))
 
-      priorRows   <- argo.priorCsv.traverse(readRows)
-      priorPoints  = priorRows.orZ.map2(row => row("Athlete").toLong -> row("Points").toDouble / argo.priorDays)
+      stragglern = regRows.length % captainIds.size + captainIds.size
+      stragglerz = allAthletes.takeRight(stragglern).count(_.points == 0)
+      _          = if (stragglern > 0) println(s"Dropping $stragglern stragglers, $stragglerz with no points")
+
+      baseAthletes =
+        allAthletes
+          .dropRight(stragglern) // drop stragglers by 0 points then registration time (assuming that's the order)
+          .sortBy(_.id) // then sort by id for some sense of order
+
+      pointless    = baseAthletes.count(_.points == 0)
+      _            = println(s"$pointless 0-point competitors")
+
+      priorRows  <- argo.priorCsv.traverse(readRows)
+      priorPoints = priorRows.orZ.map2(row => row("Athlete").toLong -> row("Points").toDouble / argo.priorDays)
+
+      antagonistRows <- argo.antagonistsCsv.traverse(readRows)
+      antagonists     = antagonistRows.orZ.map(row => row.values.map(_.toLong).toSet)
 
       athletes =
         baseAthletes.map(athlete => priorPoints.get(athlete.id).transform(athlete)(_.repoint(_, argo.priorWeight)))
@@ -89,7 +107,7 @@ object FreezingTeams extends App {
 
       // Form initial teams from just the captains
       captainAssignment =
-        Assignment(teamSize, points, captains.map(captain => Team(captain.id, captain :: Nil)), zipCodes)
+        Assignment(teamSize, points, captains.map(captain => Team(captain.id, captain :: Nil)), zipCodes, antagonists)
 
       // Allocate zeroes evenly across the teams
       zeroAssignment    = zeroes.foldr(captainAssignment)(athlete => _ + athlete)

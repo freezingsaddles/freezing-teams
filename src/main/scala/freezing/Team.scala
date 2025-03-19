@@ -9,6 +9,9 @@ final case class Team(captain: Long, athletes: List[Athlete]) {
   /** Total team points. */
   lazy val points: Double = athletes.map(_.points).sum
 
+  /** All ids. */
+  lazy val ids: Set[Long] = athletes.map(_.id).toSet + captain
+
   /** Number of team athletes. */
   def size: Int = athletes.size
 
@@ -26,6 +29,10 @@ final case class Team(captain: Long, athletes: List[Athlete]) {
 
   /** Construct a new team by removing an athlete from this team. */
   def -(athlete: Athlete): Team = copy(athletes = athletes.filterNot(_.id == athlete.id))
+
+  /** Add an antagonistic penalty for some pairings. */
+  def antagonism(antagonists: List[Set[Long]]): Double =
+    if (antagonists.map(_ & ids).exists(_.size > 1)) 1000 else 0
 
   /** Compute the RMS distance of all athletes from the captain. */
   def locality(zipCodes: Map[String, ZipCode]): Double = {
