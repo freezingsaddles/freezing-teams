@@ -13,6 +13,15 @@ licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.
 
 scalaVersion := "2.13.16"
 
+scalacOptions ++= Seq(
+  "-deprecation",
+  "-feature",
+  "-unchecked",
+  "-Xfatal-warnings",
+  "-encoding",
+  "UTF-8",
+)
+
 libraryDependencies ++= Seq(
   "com.learningobjects" %% "scaloi"     % "0.3.1",
   "com.nrinaudo"        %% "kantan.csv" % "0.8.0",

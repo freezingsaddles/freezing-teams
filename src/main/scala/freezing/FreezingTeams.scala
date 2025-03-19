@@ -125,7 +125,7 @@ object FreezingTeams extends App {
 
       _ <- writeRows(argo.outputCsv, finalAssignment.asRows ::: stragglers, Assignment.Headers)
 
-      _ <- argo.outputMap.cata(writeRows(_, finalAssignment.mapRows, Assignment.MapHeaders), Success())
+      _ <- argo.outputMap.cata(writeRows(_, finalAssignment.mapRows, Assignment.MapHeaders), Success(()))
     } yield {
       val locality = finalAssignment.teams.map(_.locality(zipCodes)).average
       println(
@@ -133,9 +133,7 @@ object FreezingTeams extends App {
       )
       println(
         finalAssignment.teams
-          .map(team =>
-            team.points + " / " + team.athletes.count(_.points == 0) + " / " + team.locality(zipCodes).toInt + "mi"
-          )
+          .map(team => s"${team.points} / ${team.athletes.count(_.points == 0)} / ${team.locality(zipCodes).toInt}mi")
           .zipWithIndex
           .mkString("\n")
       )
