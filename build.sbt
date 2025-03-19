@@ -28,5 +28,6 @@ libraryDependencies ++= Seq(
 ).map(_.cross(CrossVersion.for3Use2_13))
 
 libraryDependencies ++= Seq(
-  "com.github.scopt" %% "scopt" % "4.1.0"
+  "com.github.scopt" %% "scopt"     % "4.1.0",
+  "org.scalatest"    %% "scalatest" % "3.2.19" % "test",
 )

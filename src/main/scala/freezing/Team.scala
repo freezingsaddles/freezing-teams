@@ -31,11 +31,11 @@ final case class Team(captain: Long, athletes: List[Athlete]):
   def -(athlete: Athlete): Team = copy(athletes = athletes.filterNot(_.id == athlete.id))
 
   /** Add an antagonistic penalty for some pairings. */
-  def antagonism(antagonists: List[Set[Long]]): Double =
-    if antagonists.map(_ & ids).exists(_.size > 1) then 1000 else 0
+  def antagonism(using antagonists: Antagonists): Double =
+    if antagonists.precludes(ids) then 1000 else 0
 
   /** Compute the RMS distance of all athletes from the captain. */
-  def locality(zipCodes: Map[String, ZipCode]): Double =
+  def locality(using zipCodes: ZipCodes): Double =
     // some captains don't have zips but they are first and so tend to be selected
     val captainZipOpt = athletes.reverse.findMap(a => zipCodes.get(a.zipCode))
     val distances     = for

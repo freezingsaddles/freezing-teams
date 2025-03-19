@@ -1,5 +1,7 @@
 package freezing
 
+type ZipCodes = Map[String, ZipCode]
+
 final case class ZipCode(zipCode: String, latitude: Double, longitude: Double):
   // https://en.wikipedia.org/wiki/Versine#hav
   def -(elsewhere: ZipCode): Double =

@@ -6,7 +6,7 @@ import scopt.OParser
 import java.io.File
 
 /** Team allocation arguments. */
-final case class Args(
+case class Args(
   registrationsCsv: File = new File("."),
   pointsCsv: File = new File("."),
   outputCsv: File = new File("."),
@@ -18,13 +18,14 @@ final case class Args(
   priorDays: Int = Dates.competitionDaysLastYear,
   priorWeight: Double = 0.5,
   localityWeight: Double = 1.0,
+  minTeamSize: Int = 10,
 )
 
 /** Argument parsing. */
 object Args:
 
   /** Parse arguments. */
-  def apply(args: Array[String]): Option[Args] = OParser.parse(parser, args, defaults)
+  def apply(args: Seq[String]): Option[Args] = OParser.parse(parser, args, defaults)
 
   private val defaults = Args()
 
@@ -34,7 +35,7 @@ object Args:
     import builder.*
     OParser.sequence(
       programName("FreezingTeams"),
-      head("Freezing teams", "0.2"),
+      head("Freezing teams", "0.3"),
       opt[File]("registrations")
         .action((x, c) => c.copy(registrationsCsv = x))
         .text("current year registrations CSV file")

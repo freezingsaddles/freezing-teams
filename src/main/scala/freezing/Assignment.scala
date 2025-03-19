@@ -11,11 +11,9 @@ import scala.annotation.tailrec
 
 /** Assignment of athletes among a set of teams. */
 final case class Assignment(
-  size: Int,
-  points: Double,
+  size: Int,      // target team size
+  points: Double, // target team points
   teams: List[Team],
-  zipCodes: Map[String, ZipCode],
-  antagonists: List[Set[Long]]
 ):
 
   /** Number of zero pointers. */
@@ -36,20 +34,20 @@ final case class Assignment(
   /** Standard deviation of this assignment from the ideal team distribution. */
   def standardDeviation: Double = Math.sqrt(teams.map(_.variance(points)).average)
 
-  def locality: Double = Math.sqrt(teams.map(team => Math.pow(team.locality(zipCodes), 2)).average)
+  def locality(using zipCodes: ZipCodes): Double = Math.sqrt(teams.map(team => Math.pow(team.locality, 2)).average)
 
-  def standardDeviationPlus(implicit args: Args): Double =
+  def standardDeviationPlus(using args: Args, antagonists: Antagonists, zipCodes: ZipCodes): Double =
     Math.sqrt(
       teams
         .map(team =>
-          team.variance(points) + team.antagonism(antagonists) + Math
-            .pow(team.locality(zipCodes) * args.localityWeight, 3)
+          team.variance(points) + team.antagonism + Math
+            .pow(team.locality * args.localityWeight, 3)
         )
         .average
     )
 
   /** Construct a new assignment by adding an athlete to the appropriate team. */
-  def +(athlete: Athlete): Assignment = this + ((athlete.zero ? smallest | weakest) + athlete)
+  def +:(athlete: Athlete): Assignment = this + ((athlete.zero ? smallest | weakest) + athlete)
 
   /** Construct a new assignment by replacing one team with an alternate. */
   def +(team: Team): Assignment = copy(teams = team :: teams.filterNot(_.captain == team.captain))
@@ -68,12 +66,12 @@ final case class Assignment(
   /** Return rows of the team assignments. */
   def asRows: List[List[String]] = for
     (team, index) <- teams.zipWithIndex
-    athlete       <- team.athletes
+    athlete       <- team.athletes.sortBy(_.id != team.captain)
     captain        = (athlete.id == team.captain) ?? "Yes"
   yield (1 + index).toString :: athlete.id.toString :: athlete.name :: athlete.email :: captain :: Nil
 
   /** Return roms of the map output. */
-  def mapRows: List[List[String]] =
+  def mapRows(using zipCodes: ZipCodes): List[List[String]] =
     for
       team     <- teams
       captain  <- team.athletes.find(a => a.id == team.captain).toList
@@ -91,7 +89,9 @@ object Assignment:
   final val MapHeaders = "Captain" :: "Latitude" :: "Longitude" :: Nil
 
   /** Generate a locally optimal team assignment. */
-  @tailrec def optimise(current: Assignment)(implicit args: Args): Assignment =
+  @tailrec def optimise(
+    current: Assignment
+  )(using args: Args, antagonists: Antagonists, zipCodes: ZipCodes): Assignment =
     // This is super inefficient; could be done much better with a priority queue,
     // updating standard deviation only as players are exchanged.
 
