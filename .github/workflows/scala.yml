@@ -27,6 +27,11 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: 'sbt'
+    - name: Install sbt
+      run: |
+        echo "Installing sbt..."
+        sudo apt-get update
+        sudo apt-get install -y sbt
     - name: Run tests
       run: sbt test
       # Optional: This step uploads information to the GitHub dependency graph and unblocking Dependabot alerts for the repository
