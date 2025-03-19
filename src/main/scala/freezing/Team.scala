@@ -1,10 +1,10 @@
 package freezing
 
-import scalaz.std.list._
-import scaloi.syntax.foldable._
+import scalaz.std.list.*
+import scaloi.syntax.foldable.*
 
 /** Team of athletes. */
-final case class Team(captain: Long, athletes: List[Athlete]) {
+final case class Team(captain: Long, athletes: List[Athlete]):
 
   /** Total team points. */
   lazy val points: Double = athletes.map(_.points).sum
@@ -31,20 +31,20 @@ final case class Team(captain: Long, athletes: List[Athlete]) {
   def -(athlete: Athlete): Team = copy(athletes = athletes.filterNot(_.id == athlete.id))
 
   /** Add an antagonistic penalty for some pairings. */
-  def antagonism(antagonists: List[Set[Long]]): Double =
-    if (antagonists.map(_ & ids).exists(_.size > 1)) 1000 else 0
+  def antagonism(using antagonists: Antagonists): Double =
+    if antagonists.precludes(ids) then 1000 else 0
 
   /** Compute the RMS distance of all athletes from the captain. */
-  def locality(zipCodes: Map[String, ZipCode]): Double = {
+  def locality(using zipCodes: ZipCodes): Double =
     // some captains don't have zips but they are first and so tend to be selected
     val captainZipOpt = athletes.reverse.findMap(a => zipCodes.get(a.zipCode))
-    val distances     = for {
+    val distances     = for
       player     <- players
       playerZip  <- zipCodes.get(player.zipCode)
       captainZip <- captainZipOpt
       distance    = playerZip - captainZip
       if distance < 50 // distance above 50 miles suggests bogus zip code
-    } yield distance
-    if (distances.isEmpty) 0.0 else Math.sqrt(distances.map(d => d * d).average)
-  }
-}
+    yield distance
+    if distances.isEmpty then 0.0 else Math.sqrt(distances.map(d => d * d).average)
+  end locality
+end Team

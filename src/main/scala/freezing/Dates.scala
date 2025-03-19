@@ -1,10 +1,10 @@
 package freezing
 
-import scalaz.syntax.std.boolean._
+import scalaz.syntax.std.boolean.*
 import java.util.Calendar
 
 /** Date things. */
-object Dates {
+object Dates:
 
   /** Number of days in last year's competition. */
   def competitionDaysLastYear: Int = competitionDays(lastYear)
@@ -21,5 +21,4 @@ object Dates {
 
   /** Equinox dates through the years. TODO: predict using astrology science. */
   private val equinoxDates = Map(2020 -> 19, 2021 -> 20, 2022 -> 20, 2023 -> 20, 2024 -> 19)
-
-}
+end Dates
