@@ -82,8 +82,8 @@ object FreezingTeams extends App {
           .dropRight(stragglern) // drop stragglers by 0 points then registration time (assuming that's the order)
           .sortBy(_.id) // then sort by id for some sense of order
 
-      pointless    = baseAthletes.count(_.points == 0)
-      _            = println(s"$pointless 0-point competitors")
+      pointless = baseAthletes.count(_.points == 0)
+      _         = println(s"$pointless 0-point competitors")
 
       priorRows  <- argo.priorCsv.traverse(readRows)
       priorPoints = priorRows.orZ.map2(row => row("Athlete").toLong -> row("Points").toDouble / argo.priorDays)
@@ -110,7 +110,7 @@ object FreezingTeams extends App {
         Assignment(teamSize, points, captains.map(captain => Team(captain.id, captain :: Nil)), zipCodes, antagonists)
 
       // Allocate zeroes evenly across the teams
-      zeroAssignment    = zeroes.foldr(captainAssignment)(athlete => _ + athlete)
+      zeroAssignment = zeroes.foldr(captainAssignment)(athlete => _ + athlete)
 
       // Allocate heroes across the teams, strongest player to the weakest team
       // Were this a perfect optimizer this initial allocation would not matter; as is, it has a random effect
