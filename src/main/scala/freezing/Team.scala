@@ -1,5 +1,8 @@
 package freezing
 
+import scalaz.std.list._
+import scaloi.syntax.foldable._
+
 /** Team of athletes. */
 final case class Team(captain: Long, athletes: List[Athlete]) {
 
@@ -23,4 +26,18 @@ final case class Team(captain: Long, athletes: List[Athlete]) {
 
   /** Construct a new team by removing an athlete from this team. */
   def -(athlete: Athlete): Team = copy(athletes = athletes.filterNot(_.id == athlete.id))
+
+  /** Compute the RMS distance of all athletes from the captain. */
+  def locality(zipCodes: Map[String, ZipCode]): Double = {
+    // some captains don't have zips but they are first and so tend to be selected
+    val captainZipOpt = athletes.reverse.findMap(a => zipCodes.get(a.zipCode))
+    val distances     = for {
+      player     <- players
+      playerZip  <- zipCodes.get(player.zipCode)
+      captainZip <- captainZipOpt
+      distance    = playerZip - captainZip
+      if distance < 50 // distance above 50 miles suggests bogus zip code
+    } yield distance
+    if (distances.isEmpty) 0.0 else Math.sqrt(distances.map(d => d * d).average)
+  }
 }
