@@ -14,6 +14,7 @@ final case class Assignment(
   size: Int,      // target team size
   points: Double, // target team points
   teams: List[Team],
+  stragglers: List[Athlete],
 ):
 
   /** Number of zero pointers. */
@@ -63,12 +64,16 @@ final case class Assignment(
     if !bPlayer.zero || (aTeam.zeroes < maxZeroes && bTeam.zeroes > minZeroes) // no violation of zero limits
   yield this + (aTeam - aPlayer + bPlayer) + (bTeam - bPlayer + aPlayer) // exchange the players
 
-  /** Return rows of the team assignments. */
-  def asRows: List[List[String]] = for
-    (team, index) <- teams.zipWithIndex
-    athlete       <- team.athletes.sortBy(_.id != team.captain)
-    captain        = (athlete.id == team.captain) ?? "Yes"
-  yield (1 + index).toString :: athlete.id.toString :: athlete.name :: athlete.email :: captain :: Nil
+  /** Return rows of the team assignments and stragglers. */
+  def asRows: List[List[String]] =
+    val rows  = for
+      (team, index) <- teams.zipWithIndex
+      athlete       <- team.athletes.sortBy(_.id != team.captain)
+      captain        = (athlete.id == team.captain) ?? "Yes"
+    yield (1 + index).toString :: athlete.id.toString :: athlete.name :: athlete.email :: captain :: Nil
+    val dregs = stragglers.map: athlete =>
+      "" :: athlete.id.toString :: athlete.name :: athlete.email :: "" :: Nil
+    rows ++ dregs
 
   /** Return roms of the map output. */
   def mapRows(using zipCodes: ZipCodes): List[List[String]] =
