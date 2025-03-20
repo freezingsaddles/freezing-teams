@@ -17,7 +17,7 @@ class FreezingTest extends AnyFreeSpec with Matchers:
 
       val athletes = List(chris, cristle, kris, krystal)
 
-      val (assignment, stragglers) = solve(athletes)
+      val assignment = allocate(athletes)
 
       assignment.size shouldBe 2
       assignment.points shouldBe 3.78 +- .01
@@ -26,8 +26,7 @@ class FreezingTest extends AnyFreeSpec with Matchers:
         Team(kris.id, List(krystal, kris)),
         Team(chris.id, List(cristle, chris)),
       )
-
-      stragglers shouldBe empty
+      assignment.stragglers shouldBe empty
     }
 
     "should optimise with locality" in {
@@ -48,7 +47,7 @@ class FreezingTest extends AnyFreeSpec with Matchers:
 
       val athletes = List(chris, cristle, kris, krystal)
 
-      val (assignment, stragglers) = solve(athletes)
+      val assignment = allocate(athletes)
 
       assignment.size shouldBe 2
       assignment.points shouldBe 3.78 +- .01
@@ -57,8 +56,7 @@ class FreezingTest extends AnyFreeSpec with Matchers:
         Team(kris.id, List(cristle, kris)),
         Team(chris.id, List(krystal, chris)),
       )
-
-      stragglers shouldBe empty
+      assignment.stragglers shouldBe empty
     }
   }
 end FreezingTest
