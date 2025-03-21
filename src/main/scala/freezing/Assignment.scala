@@ -21,10 +21,10 @@ final case class Assignment(
   private val zeroes = teams.foldMap(_.zeroes)
 
   /** Minimum zero pointers allowed on a team. */
-  private val minZeroes = Math.floorDiv(zeroes, teams.length)
+  private val minZeroes = zeroes.floorDiv(teams.length)
 
   /** Maximum zero pointers allowed on a team. */
-  private val maxZeroes = Math.floorDiv(zeroes + teams.length - 1, teams.length)
+  private val maxZeroes = zeroes.ceilDiv(teams.length)
 
   /** The weakest team with smaller than the target team size. */
   def weakest: Team = teams.filter(_.size < size).minBy(_.points)
@@ -32,20 +32,18 @@ final case class Assignment(
   /** The smallest team, for accepting zeroes. */
   def smallest: Team = teams.minBy(_.size)
 
+  /** Measure of locality of the teams. RMS of the deviation from captain's location. */
+  def locality(using zipCodes: ZipCodes): Double = teams.map(_.locality).rms
+
   /** Standard deviation of this assignment from the ideal team distribution. */
-  def standardDeviation: Double = Math.sqrt(teams.map(_.variance(points)).average)
+  def standardDeviation: Double = teams.map(_.points - points).rms
 
-  def locality(using zipCodes: ZipCodes): Double = Math.sqrt(teams.map(team => Math.pow(team.locality, 2)).average)
-
+  /** Standard deviation plus antagonism and locality penalties. */
   def standardDeviationPlus(using args: Args, antagonists: Antagonists, zipCodes: ZipCodes): Double =
-    Math.sqrt(
-      teams
-        .map(team =>
-          team.variance(points) + team.antagonism + Math
-            .pow(team.locality * args.localityWeight, 3)
-        )
-        .average
-    )
+    teams
+      .map: team =>
+        team.variance(points) + team.antagonism + ((team.locality * args.localityWeight) ^ 3)
+      .rootMean
 
   /** Construct a new assignment by adding an athlete to the appropriate team. */
   def +:(athlete: Athlete): Assignment = this + ((athlete.zero ? smallest | weakest) + athlete)
@@ -105,11 +103,7 @@ object Assignment:
     ) // so side effect
     // Find the alternate team with the least standard deviation
     val alternate = current.liaisons.minBy(_.standardDeviationPlus)
-    if alternate.standardDeviationPlus < current.standardDeviationPlus then
-      // If it's better than the current assignment, try to optimise it more
-      optimise(alternate)
-    else
-      // Else stick with what we have
-      current
+    // If it's better than the current assignment, try to optimise it more else stick with what we have
+    if alternate.standardDeviationPlus < current.standardDeviationPlus then optimise(alternate) else current
   end optimise
 end Assignment

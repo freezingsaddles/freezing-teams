@@ -3,7 +3,6 @@ package freezing
 import scalaz.std.list.*
 import scalaz.std.map.*
 import scalaz.std.option.*
-import scalaz.syntax.std.option.*
 import scalaz.syntax.traverse.*
 import scaloi.misc.Monoids.*
 import scaloi.misc.TryInstances.*
@@ -17,33 +16,33 @@ import scala.util.Try
 @main def main(args: String*): Unit = attempt(args).get
 
 def attempt(args: Seq[String]): Try[Unit] = for
-  argo      <- Args(args) <@~* Fatality("Syntax error")
-  given Args = argo
+  args      <- Args(args) <@~* Fatality("Syntax error")
+  given Args = args
 
-  zipRows       <- argo.zipCodesCsv.cata(_.readCsvWithHeader, Try(Nil))
-  given ZipCodes = zipRows.toZipCodes
+  zipRows       <- args.zipCodesCsv.traverse(_.readCsvWithHeader)
+  given ZipCodes = zipRows.foldZ(_.toZipCodes)
 
-  antagonistRows   <- argo.antagonistsCsv.traverse(_.readCsvWithHeader)
+  antagonistRows   <- args.antagonistsCsv.traverse(_.readCsvWithHeader)
   given Antagonists = antagonistRows.foldZ(_.toAntagonists)
 
-  pointsRows <- argo.pointsCsv.readCsvWithHeader
+  pointsRows <- args.pointsCsv.readCsvWithHeader
   pointsMap   = pointsRows.toAthletePoints
 
-  priorRows  <- argo.priorCsv.traverse(_.readCsvWithHeader)
+  priorRows  <- args.priorCsv.traverse(_.readCsvWithHeader)
   priorPoints = priorRows.foldZ(_.toAthletePoints)
 
-  registrationRows <- argo.registrationsCsv.readCsvWithHeader
+  registrationRows <- args.registrationsCsv.readCsvWithHeader
   registrants       = registrationRows.toAthletes(pointsMap, priorPoints)
 
   assignment = allocate(registrants)
 
-  _ <- argo.outputCsv.writeRows(assignment.asRows, Assignment.Headers)
+  _ <- args.outputCsv.writeRows(assignment.asRows, Assignment.Headers)
 
-  _ <- argo.outputMap.traverse(_.writeRows(assignment.mapRows, Assignment.MapHeaders))
+  _ <- args.outputMap.traverse(_.writeRows(assignment.mapRows, Assignment.MapHeaders))
 yield
   val locality = assignment.teams.map(_.locality).average
   println(
-    s"Wrote ${argo.outputCsv} (standard deviation ${assignment.standardDeviation}, locality ${locality}mi)"
+    s"Wrote ${args.outputCsv} (standard deviation ${assignment.standardDeviation}, locality ${locality}mi)"
   )
   println(
     assignment.teams
