@@ -20,5 +20,5 @@ object Dates:
   private def wasLeapYear(year: Int): Boolean = (year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0))
 
   /** Equinox dates through the years. TODO: predict using astrology science. */
-  private val equinoxDates = Map(2020 -> 19, 2021 -> 20, 2022 -> 20, 2023 -> 20, 2024 -> 19)
+  private val equinoxDates = Map(2020 -> 19, 2021 -> 20, 2022 -> 20, 2023 -> 20, 2024 -> 19, 2025 -> 19)
 end Dates

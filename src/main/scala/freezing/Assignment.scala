@@ -10,7 +10,7 @@ import scaloi.syntax.foldable.*
 import scala.annotation.tailrec
 
 /** Assignment of athletes among a set of teams. */
-final case class Assignment(
+case class Assignment(
   size: Int,      // target team size
   points: Double, // target team points
   teams: List[Team],
