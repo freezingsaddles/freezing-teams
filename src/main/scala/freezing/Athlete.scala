@@ -1,7 +1,7 @@
 package freezing
 
 /** Model of athlete with points normalized to per day. */
-final case class Athlete(
+case class Athlete(
   id: Long,
   name: String,
   email: String,

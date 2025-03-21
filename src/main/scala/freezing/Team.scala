@@ -4,7 +4,7 @@ import scalaz.std.list.*
 import scaloi.syntax.foldable.*
 
 /** Team of athletes. */
-final case class Team(captain: Long, athletes: List[Athlete]):
+case class Team(captain: Long, athletes: List[Athlete]):
 
   /** Total team points. */
   lazy val points: Double = athletes.map(_.points).sum
