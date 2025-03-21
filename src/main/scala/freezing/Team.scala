@@ -45,6 +45,6 @@ final case class Team(captain: Long, athletes: List[Athlete]):
       distance    = playerZip - captainZip
       if distance < 50 // distance above 50 miles suggests bogus zip code
     yield distance
-    if distances.isEmpty then 0.0 else Math.sqrt(distances.map(d => d * d).average)
+    if distances.isEmpty then 0.0 else distances.rms
   end locality
 end Team

@@ -13,7 +13,7 @@ final case class ZipCode(zipCode: String, latitude: Double, longitude: Double):
       (Math.cos(Math.toRadians(latitude)) *
         Math.cos(Math.toRadians(latitude)) *
         sinLng * sinLng)
-    ZipCode.EarthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    ZipCode.EarthRadius * 2 * Math.atan2(a.sqrt, (1 - a).sqrt)
   end -
 end ZipCode
 

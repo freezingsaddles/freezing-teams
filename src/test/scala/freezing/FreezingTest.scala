@@ -2,6 +2,7 @@ package freezing
 
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import scalaz.std.list.*
 
 class FreezingTest extends AnyFreeSpec with Matchers:
   "Assignment" - {
@@ -57,6 +58,23 @@ class FreezingTest extends AnyFreeSpec with Matchers:
         Team(chris.id, List(krystal, chris)),
       )
       assignment.stragglers shouldBe empty
+    }
+  }
+  "Freezing Teams" - {
+    "should math" in {
+      9.0.sqrt shouldBe 3.0
+      3.0 ^ 3 shouldBe 27.0
+      List(1.0, 2.0, 3.0).rms shouldBe (14.0 / 3).sqrt
+      List(1.0, 2.0, 3.0).rootMean shouldBe (6.0 / 3).sqrt
+      1.floorDiv(2) shouldBe 0
+      2.floorDiv(2) shouldBe 1
+      1.ceilDiv(2) shouldBe 1
+      2.ceilDiv(2) shouldBe 1
+    }
+
+    "should preclude antagonists" in {
+      List(Set(1L, 2L), Set(1L, 3L)).precludes(Set(2L, 3L)) shouldBe false
+      List(Set(1L, 2L), Set(1L, 3L)).precludes(Set(1L, 2L)) shouldBe true
     }
   }
 end FreezingTest
