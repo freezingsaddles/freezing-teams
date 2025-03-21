@@ -29,5 +29,5 @@ libraryDependencies ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.github.scopt" %% "scopt"     % "4.1.0",
-  "org.scalatest"    %% "scalatest" % "3.2.19" % "test",
+  "org.scalatest"    %% "scalatest" % "3.2.18" % "test",
 )
