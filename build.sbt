@@ -17,7 +17,7 @@ scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
   "-unchecked",
-  "-Xfatal-warnings",
+  "-Werror",
   "-encoding",
   "UTF-8",
 )
