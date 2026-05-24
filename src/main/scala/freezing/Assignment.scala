@@ -5,9 +5,9 @@ import scalaz.std.list.*
 import scalaz.std.string.*
 import scalaz.syntax.foldable.*
 import scalaz.syntax.std.boolean.*
-import scaloi.syntax.foldable.*
 
 import scala.annotation.tailrec
+import scala.collection.parallel.CollectionConverters.*
 
 /** Assignment of athletes among a set of teams. */
 case class Assignment(
@@ -39,27 +39,31 @@ case class Assignment(
   def standardDeviation: Double = teams.map(_.points - points).rms
 
   /** Standard deviation plus antagonism and locality penalties. */
-  def standardDeviationPlus(using args: Args, antagonists: Antagonists, zipCodes: ZipCodes): Double =
+  def standardDeviationPlus(using args: Args, polarities: Polarities, zipCodes: ZipCodes): Double =
     teams
       .map: team =>
         team.variance(points) + team.antagonism + ((team.locality * args.localityWeight) ^ 3)
       .rootMean
 
   /** Construct a new assignment by adding an athlete to the appropriate team. */
-  def +:(athlete: Athlete): Assignment = this + ((athlete.zero ? smallest | weakest) + athlete)
+  def +:(athlete: Athlete)(using polarities: Polarities): Assignment =
+    val coupleTeam = polarities.couples.find(_(athlete.id)).flatMap(couple => teams.find(_.ids.exists(couple)))
+    this + (coupleTeam.getOrElse(athlete.zero ? smallest | weakest) + athlete)
 
   /** Construct a new assignment by replacing one team with an alternate. */
   def +(team: Team): Assignment = copy(teams = team :: teams.filterNot(_.captain == team.captain))
 
   /** Find all possible alternate assignments created by exchanging just a single pair of athletes. */
-  private def liaisons: Iterator[Assignment] = for
+  private def liaisons(using polarities: Polarities): Iterator[Assignment] = for
     tail    <- teams.tails if tail.nonEmpty
     aTeam    = tail.head     // for all possible A teams
     bTeam   <- tail.tail     // for all subsequent B teams
     aPlayer <- aTeam.players // for all A players
     if !aPlayer.zero || (bTeam.zeroes < maxZeroes && aTeam.zeroes > minZeroes) // no violation of zero limits
+    if !polarities.couples.exists(_(aPlayer.id)) // don't split couples
     bPlayer <- bTeam.players // for all B players
     if !bPlayer.zero || (aTeam.zeroes < maxZeroes && bTeam.zeroes > minZeroes) // no violation of zero limits
+    if !polarities.couples.exists(_(bPlayer.id)) // don't split couples
   yield this + (aTeam - aPlayer + bPlayer) + (bTeam - bPlayer + aPlayer) // exchange the players
 
   /** Return rows of the team assignments and stragglers. */
@@ -68,9 +72,9 @@ case class Assignment(
       (team, index) <- teams.zipWithIndex
       athlete       <- team.athletes.sortBy(_.id != team.captain)
       captain        = (athlete.id == team.captain) ?? "Yes"
-    yield (1 + index).toString :: athlete.id.toString :: athlete.name :: athlete.email :: captain :: Nil
+    yield (1 + index).toString :: athlete.id.toString :: athlete.name :: athlete.forumId :: athlete.email :: captain :: Nil
     val dregs = stragglers.map: athlete =>
-      "" :: athlete.id.toString :: athlete.name :: athlete.email :: "" :: Nil
+      "" :: athlete.id.toString :: athlete.name :: athlete.forumId :: athlete.email :: "" :: Nil
     rows ++ dregs
 
   /** Return roms of the map output. */
@@ -88,13 +92,13 @@ case class Assignment(
 end Assignment
 
 object Assignment:
-  final val Headers    = "Team" :: "Strava ID" :: "Name" :: "Email" :: "Captain" :: Nil
+  final val Headers    = "Team" :: "Strava ID" :: "Name" :: "Forum ID" :: "Email" :: "Captain" :: Nil
   final val MapHeaders = "Captain" :: "Latitude" :: "Longitude" :: Nil
 
   /** Generate a locally optimal team assignment. */
   @tailrec def optimise(
     current: Assignment
-  )(using args: Args, antagonists: Antagonists, zipCodes: ZipCodes): Assignment =
+  )(using args: Args, pol: Polarities, zipCodes: ZipCodes): Assignment =
     // This is super inefficient; could be done much better with a priority queue,
     // updating standard deviation only as players are exchanged.
 
@@ -102,7 +106,7 @@ object Assignment:
       s"\u001b[FRMS: ${current.standardDeviationPlus} – ${current.standardDeviation}pt, ${current.locality}mi"
     ) // so side effect
     // Find the alternate team with the least standard deviation
-    val alternate = current.liaisons.minBy(_.standardDeviationPlus)
+    val alternate = current.liaisons.toVector.par.minBy(_.standardDeviationPlus)
     // If it's better than the current assignment, try to optimise it more else stick with what we have
     if alternate.standardDeviationPlus < current.standardDeviationPlus then optimise(alternate) else current
   end optimise

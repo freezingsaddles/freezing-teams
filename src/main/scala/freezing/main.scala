@@ -22,8 +22,13 @@ def attempt(args: Seq[String]): Try[Unit] = for
   zipRows       <- args.zipCodesCsv.traverse(_.readCsvWithHeader)
   given ZipCodes = zipRows.foldZ(_.toZipCodes)
 
-  antagonistRows   <- args.antagonistsCsv.traverse(_.readCsvWithHeader)
-  given Antagonists = antagonistRows.foldZ(_.toAntagonists)
+  antagonistRows <- args.antagonistsCsv.traverse(_.readCsvWithHeader)
+  antagonists     = antagonistRows.foldZ(_.toListSetLong)
+
+  protagonistRows <- args.couplesCsv.traverse(_.readCsvWithHeader)
+  couples          = protagonistRows.foldZ(_.toListSetLong)
+
+  given Polarities = (antagonists, couples)
 
   pointsRows <- args.pointsCsv.readCsvWithHeader
   pointsMap   = pointsRows.toAthletePoints
@@ -32,7 +37,7 @@ def attempt(args: Seq[String]): Try[Unit] = for
   priorPoints = priorRows.foldZ(_.toAthletePoints)
 
   registrationRows <- args.registrationsCsv.readCsvWithHeader
-  registrants       = registrationRows.toAthletes(pointsMap, priorPoints)
+  registrants       = registrationRows.toAthletes(pointsMap, priorPoints).distinctBy(_.id)
 
   assignment = allocate(registrants)
 
@@ -54,15 +59,21 @@ end attempt
 
 def allocate(
   registrants: List[Athlete]
-)(using args: Args, antagonists: Antagonists, zipCodes: ZipCodes): Assignment =
+)(using args: Args, polarities: Polarities, zipCodes: ZipCodes): Assignment =
+  val dc        = zipCodes("20500")
+  val locations = registrants.flatMap(r => zipCodes.get(r.zipCode)).filter(z => (z - dc) < 50).map(_.toCartesian)
+  val centroid  = (locations.suml / locations.size).toLatLong
+  println(s"Centroid $centroid")
+
   // We will discard all non-riders except those needed to make the team sizes even
   val riderCount = registrants.count(_.nonZero) // Folks have ridden this year
   val teamCount  = registrants.count(_.possibleCaptain).min(riderCount / args.minTeamSize)
-  val teamSize   = (riderCount + teamCount - 1).min(registrants.size) / teamCount
+  val teamSize   = (riderCount).min(registrants.size) / (teamCount)
 
   // Take players and captains in registration order as long as they have some points by now
   val (athletes, stragglers) = registrants.sortBy(_.zero).splitAt(teamCount * teamSize)
-  val (captains, players)    = athletes.sortBy(_.nonCaptain).splitAt(teamCount)
+  val captains               = athletes.filter(_.possibleCaptain).take(teamCount)
+  val players                = athletes.filterNot(captains.contains)
 
   val points = athletes.foldMap(_.points) / teamCount
   println(s"$teamCount teams, $teamSize athletes per team, target team points: $points")

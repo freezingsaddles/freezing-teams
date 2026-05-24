@@ -14,6 +14,7 @@ case class Args(
   zipCodesCsv: Option[File] = None,
   priorCsv: Option[File] = None,
   antagonistsCsv: Option[File] = None,
+  couplesCsv: Option[File] = None,
   pointsDays: Int = 7,
   priorDays: Int = Dates.competitionDaysLastYear,
   priorWeight: Double = 0.5,
@@ -60,6 +61,10 @@ object Args:
       opt[File]("antagonists")
         .action((x, c) => c.copy(antagonistsCsv = Some(x)))
         .text("antagonists CSV file")
+        .validate(fileExists),
+      opt[File]("couples")
+        .action((x, c) => c.copy(couplesCsv = Some(x)))
+        .text("couples CSV file")
         .validate(fileExists),
       opt[File]("zipCodes")
         .action((x, c) => c.copy(zipCodesCsv = Some(x)))
