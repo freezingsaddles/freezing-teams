@@ -1,5 +1,6 @@
 package freezing
 
+import scaloi.Zero
 import scaloi.syntax.collection.*
 
 extension (self: CsvRows)
@@ -9,7 +10,7 @@ extension (self: CsvRows)
         ZipCode(row("Zip Code"), row.double("Latitude"), row.double("Longitude"))
       .groupUniqBy(_.zipCode)
 
-  def toAntagonists: Antagonists =
+  def toListSetLong: List[Set[Long]] =
     self.map: row =>
       row.values.map(_.toLong).toSet
 
@@ -24,6 +25,7 @@ extension (self: CsvRows)
         id,
         row("First Name").trim + " " + row("Last Name").trim,
         row("E-mail"),
+        row("Your user name on the Washington Area Bike Forum"),
         row("Zip Code"),
         row("Willing to be a team captain?").startsWith("Y"),
         points.getOrElse(id, 0),

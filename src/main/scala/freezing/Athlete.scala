@@ -5,6 +5,7 @@ case class Athlete(
   id: Long,
   name: String,
   email: String,
+  forumId: String,
   zipCode: String,
   willingCaptain: Boolean,
   ytdPoints: Double,

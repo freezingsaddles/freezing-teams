@@ -11,12 +11,12 @@ extension [A](self: Option[A]) def transform[B](b: B)(f: (B, A) => B): B = self.
 
 type AthletePoints = Map[Long, Double]
 
-type Antagonists = List[Set[Long]]
+type Polarities = (antagonists: List[Set[Long]], couples: List[Set[Long]])
 
-extension (self: Antagonists)
+extension (self: Polarities)
   /** Returns whether the antagonists preclude a given team. */
   def precludes(ids: Set[Long]): Boolean =
-    self.exists: antagonists =>
+    self.antagonists.exists: antagonists =>
       (ids & antagonists).size > 1
 
 extension (self: Int)

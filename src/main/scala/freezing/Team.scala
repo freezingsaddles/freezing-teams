@@ -31,8 +31,8 @@ case class Team(captain: Long, athletes: List[Athlete]):
   def -(athlete: Athlete): Team = copy(athletes = athletes.filterNot(_.id == athlete.id))
 
   /** Add an antagonistic penalty for some pairings. */
-  def antagonism(using antagonists: Antagonists): Double =
-    if antagonists.precludes(ids) then 1000 else 0
+  def antagonism(using polarities: Polarities): Double =
+    if polarities.precludes(ids) then 1000 else 0
 
   /** Compute the RMS distance of all athletes from the captain. */
   def locality(using zipCodes: ZipCodes): Double =
