@@ -7,11 +7,11 @@ version := "0.3"
 
 organization         := "org.freezingsaddles"
 organizationName     := "Freezing Saddles"
-organizationHomepage := Some(url("https://freezingsaddles.org"))
+organizationHomepage := Some(uri("https://freezingsaddles.org"))
 
-licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.txt"))
+licenses += ("Apache-2.0", uri("https://www.apache.org/licenses/LICENSE-2.0.txt"))
 
-scalaVersion := "3.8.3"
+scalaVersion := "3.8.4"
 
 scalacOptions ++= Seq(
   "-deprecation",

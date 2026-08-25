@@ -31,14 +31,14 @@ jobs:
       uses: sbt/setup-sbt@v1
 
     - name: Run tests
-      run: sbt test
+      run: sbt --server --batch test
 
     - name: Publish test results
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
         files: |
-          target/test-reports/*.xml
+          target/out/**/test-reports/*.xml
 
     - name: Upload dependency graph
       uses: scalacenter/sbt-dependency-submission@v3
