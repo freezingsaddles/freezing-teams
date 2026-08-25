@@ -32,3 +32,13 @@ libraryDependencies ++= Seq(
   "com.github.scopt" %% "scopt"     % "4.1.0",
   "org.scalatest"    %% "scalatest" % "3.2.20" % "test",
 )
+
+// Patched versions of vulnerable transitive dependencies of org.scala-lang:scaladoc;
+// removable once scaladoc catches up
+dependencyOverrides ++= Seq(
+  "org.jsoup"                  % "jsoup"            % "1.23.1",
+  "com.fasterxml.jackson.core" % "jackson-core"     % "2.20.1",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.20.1",
+  "tools.jackson.core"         % "jackson-core"     % "3.1.5",
+  "tools.jackson.core"         % "jackson-databind" % "3.1.5",
+)
