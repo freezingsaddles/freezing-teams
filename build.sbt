@@ -36,7 +36,7 @@ libraryDependencies ++= Seq(
 // Patched versions of vulnerable transitive dependencies of org.scala-lang:scaladoc;
 // removable once scaladoc catches up
 dependencyOverrides ++= Seq(
-  "org.jsoup"                  % "jsoup"            % "1.23.1",
+  "org.jsoup"                  % "jsoup"            % "1.23.2",
   "com.fasterxml.jackson.core" % "jackson-core"     % "2.21.6",
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.21.6",
   "tools.jackson.core"         % "jackson-core"     % "3.1.5",
