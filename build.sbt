@@ -11,7 +11,7 @@ organizationHomepage := Some(uri("https://freezingsaddles.org"))
 
 licenses += ("Apache-2.0", uri("https://www.apache.org/licenses/LICENSE-2.0.txt"))
 
-scalaVersion := "3.8.4"
+scalaVersion := "3.9.0"
 
 scalacOptions ++= Seq(
   "-deprecation",
