@@ -11,7 +11,7 @@ organizationHomepage := Some(uri("https://freezingsaddles.org"))
 
 licenses += ("Apache-2.0", uri("https://www.apache.org/licenses/LICENSE-2.0.txt"))
 
-scalaVersion := "3.8.4"
+scalaVersion := "3.9.0"
 
 scalacOptions ++= Seq(
   "-deprecation",
@@ -36,9 +36,9 @@ libraryDependencies ++= Seq(
 // Patched versions of vulnerable transitive dependencies of org.scala-lang:scaladoc;
 // removable once scaladoc catches up
 dependencyOverrides ++= Seq(
-  "org.jsoup"                  % "jsoup"            % "1.23.1",
+  "org.jsoup"                  % "jsoup"            % "1.23.2",
   "com.fasterxml.jackson.core" % "jackson-core"     % "2.22.2",
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.22.2",
-  "tools.jackson.core"         % "jackson-core"     % "3.1.5",
-  "tools.jackson.core"         % "jackson-databind" % "3.1.5",
+  "tools.jackson.core"         % "jackson-core"     % "3.1.6",
+  "tools.jackson.core"         % "jackson-databind" % "3.1.6",
 )
