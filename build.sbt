@@ -39,6 +39,6 @@ dependencyOverrides ++= Seq(
   "org.jsoup"                  % "jsoup"            % "1.23.2",
   "com.fasterxml.jackson.core" % "jackson-core"     % "2.22.2",
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.22.2",
-  "tools.jackson.core"         % "jackson-core"     % "3.1.6",
-  "tools.jackson.core"         % "jackson-databind" % "3.1.6",
+  "tools.jackson.core"         % "jackson-core"     % "3.2.2",
+  "tools.jackson.core"         % "jackson-databind" % "3.2.2",
 )
