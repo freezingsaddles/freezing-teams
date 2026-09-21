@@ -1,3 +1,5 @@
+> **Moved to [freezingsaddles/freezing](https://github.com/freezingsaddles/freezing).** This code is now [`teams`](https://github.com/freezingsaddles/freezing/tree/main/teams) there. Issues here are left as a record.
+
 # Freezing Teams
 
 Assign freezing teams based on individual performance at the start of the competition and optionally
